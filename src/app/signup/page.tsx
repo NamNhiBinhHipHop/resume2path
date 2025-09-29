@@ -27,6 +27,12 @@ export default function SignupPage() {
       setError('Passwords do not match')
       return
     }
+    
+    if (!auth || !db) {
+      setError('Authentication not available in demo mode')
+      return
+    }
+    
     setIsLoading(true)
     try {
       const cred = await createUserWithEmailAndPassword(auth, email, password)

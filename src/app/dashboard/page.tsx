@@ -29,6 +29,13 @@ export default function Dashboard() {
   const [selectedAnalysisId, setSelectedAnalysisId] = useState<string>("");
   const [fbStatus, setFbStatus] = useState<'checking' | 'online' | 'offline'>("checking");
   useEffect(() => {
+    if (!auth || !db) {
+      // Firebase not configured, use demo mode
+      setUser({ uid: 'demo-user', email: 'demo@example.com' } as User);
+      setFbStatus('offline');
+      return;
+    }
+    
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
         setUser(user);

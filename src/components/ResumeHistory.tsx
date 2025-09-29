@@ -29,7 +29,13 @@ export default function ResumeHistory() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const unsubscribe = auth.onAuthStateChanged((user) => {
+    if (!auth) {
+      // Firebase not configured, use demo mode
+      setUser({ uid: 'demo-user', email: 'demo@example.com' });
+      return;
+    }
+    
+    const unsubscribe = auth.onAuthStateChanged((user: any) => {
       setUser(user);
     });
     return () => unsubscribe();

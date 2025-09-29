@@ -22,6 +22,13 @@ export default function LoginPage() {
     e.preventDefault()
     setError(null)
     setIsLoading(true)
+    
+    if (!auth) {
+      setError('Authentication not available in demo mode')
+      setIsLoading(false)
+      return
+    }
+    
     try {
       await signInWithEmailAndPassword(auth, email, password)
       router.push('/dashboard')
@@ -34,9 +41,18 @@ export default function LoginPage() {
 
   const handleGoogleSignIn = async () => {
     setGoogleLoading(true);
+    
+    if (!auth || !provider) {
+      setError('Authentication not available in demo mode');
+      setGoogleLoading(false);
+      return;
+    }
+    
     try {
       await signInWithPopup(auth, provider);
       router.push("/dashboard");
+    } catch (err: any) {
+      setError(err?.message || 'Failed to sign in with Google');
     } finally {
       setGoogleLoading(false);
     }

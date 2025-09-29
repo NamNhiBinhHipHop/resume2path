@@ -23,11 +23,22 @@ export default function Header() {
   }, []);
 
   useEffect(() => {
+    if (!auth) {
+      // Firebase not configured, use demo mode
+      setCurrentUser({ uid: 'demo-user', email: 'demo@example.com' } as User);
+      return;
+    }
+    
     const unsub = onAuthStateChanged(auth, (u) => setCurrentUser(u));
     return () => unsub();
   }, []);
 
   const handleLogout = async () => {
+    if (!auth) {
+      // Demo mode - just redirect
+      window.location.href = '/';
+      return;
+    }
     await signOut(auth);
   };
 

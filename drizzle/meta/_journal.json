@@ -1,0 +1,20 @@
+{
+  "version": "5",
+  "dialect": "pg",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "5",
+      "when": 1756037088017,
+      "tag": "0000_vengeful_randall",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "5",
+      "when": 1759012827848,
+      "tag": "0001_wooden_shotgun",
+      "breakpoints": true
+    }
+  ]
+}

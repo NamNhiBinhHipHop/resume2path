@@ -16,10 +16,12 @@ export async function POST(req: NextRequest) {
     }
 
     let prompt: string;
+    let prompt1: string;
     
   if (isChat) {
       // Chat mode - general career advice
-      prompt = `You are an AI career assistant. Provide helpful, friendly advice about resumes, career development, job search strategies, and professional growth. 
+      prompt = text;  
+      prompt1 = `You are an AI career assistant. Provide helpful, friendly advice about resumes, career development, job search strategies, and professional growth. 
 
 User question: ${text}
 

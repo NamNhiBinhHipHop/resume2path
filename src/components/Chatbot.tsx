@@ -21,7 +21,7 @@ export default function Chatbot() {
   const [messages, setMessages] = useState<Message[]>([
     {
       id: '1',
-      text: 'Hi! I\'m your AI career assistant. How can I help you today?',
+      text: 'Hi! I\'m your AI career assistant powered by Gemini AI. I can help you with:\n\n• Resume writing tips\n• Career development advice\n• Job search strategies\n• Interview preparation\n• Skill assessment\n\nWhat would you like to know?',
       sender: 'bot',
       timestamp: new Date()
     }
@@ -125,32 +125,31 @@ export default function Chatbot() {
     setInputValue('');
     setIsTyping(true);
 
-    // Simulate AI response
+    // Call Gemini AI API
     try {
-      const prompt = 'You are an AI career assistant specializing in resume writing, job search strategies, and career development. User question: ${inputValue} Please provide helpful, actionable advice that is professional but friendly, specific and practical, and under 200 words.';
-
       const response = await fetch('/api/gemini', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          text: prompt,
+          text: inputValue, // Send the user's question directly
           isChat: true
         })
       });
       
-      if (!response.ok){
-        throw new Error('AI API failed: ${response.status}');
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || `API failed with status ${response.status}`);
       }
 
       const data = await response.json();
 
       const botMessage: Message = {
-        id : (Date.now() + 1).toString(),
-        text : data.result?.description || data.rawGeminiResponse || 'Sorry, I had trouble processing that.',
-        sender : 'bot',
-        timestamp : new Date()
+        id: (Date.now() + 1).toString(),
+        text: data.result?.description || data.rawGeminiResponse || 'Sorry, I had trouble processing that.',
+        sender: 'bot',
+        timestamp: new Date()
       };
 
       setMessages(prev => [...prev, botMessage]);
@@ -160,10 +159,10 @@ export default function Chatbot() {
       console.error('AI API error:', error);
 
       const errorMessage: Message = {
-        id : (Date.now() + 1).toString(),
-        text: 'Sorry, I\'m having trouble right now. Please try again later.',
-        sender : 'bot',
-        timestamp : new Date()
+        id: (Date.now() + 1).toString(),
+        text: 'Sorry, I\'m having trouble connecting to the AI right now. Please try again later.',
+        sender: 'bot',
+        timestamp: new Date()
       };
 
       setMessages(prev => [...prev, errorMessage]);
@@ -234,7 +233,7 @@ export default function Chatbot() {
                         : 'bg-gray-100 text-gray-800 rounded-bl-md'
                     }`}
                   >
-                    <p className="text-sm">{message.text}</p>
+                    <div className="text-sm whitespace-pre-wrap">{message.text}</div>
                                             <p className={`text-xs mt-1 ${
                           message.sender === 'user' ? 'text-ocean-100' : 'text-gray-500'
                         }`}>

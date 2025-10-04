@@ -15,6 +15,25 @@ interface Message {
   timestamp: Date;
 }
 
+// Helper function to format inline markdown
+const formatInlineMarkdown = (text: string) => {
+  if (!text) return text;
+  
+  // Handle links [text](url)
+  text = text.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer" class="text-ocean-600 hover:text-ocean-700 underline">$1</a>');
+  
+  // Handle code `code`
+  text = text.replace(/`([^`]+)`/g, '<code class="bg-gray-100 px-1 py-0.5 rounded text-sm font-mono">$1</code>');
+  
+  // Handle bold **text**
+  text = text.replace(/\*\*([^*]+)\*\*/g, '<strong class="font-semibold">$1</strong>');
+  
+  // Handle italic *text* (but not **text**)
+  text = text.replace(/(?<!\*)\*([^*]+)\*(?!\*)/g, '<em class="italic">$1</em>');
+  
+  return <span dangerouslySetInnerHTML={{ __html: text }} />;
+};
+
 export default function Chatbot() {
   const [user, setUser] = useState<any>(null);
   const [isOpen, setIsOpen] = useState(false);
@@ -233,7 +252,62 @@ export default function Chatbot() {
                         : 'bg-gray-100 text-gray-800 rounded-bl-md'
                     }`}
                   >
-                    <div className="text-sm whitespace-pre-wrap">{message.text}</div>
+                    <div className="text-sm whitespace-pre-wrap">
+                      {message.text.split('\n').map((line, index) => {
+                        // Handle headers
+                        if (line.trim().startsWith('#')) {
+                          const level = line.match(/^#+/)?.[0].length || 1;
+                          const text = line.replace(/^#+\s*/, '');
+                          const HeaderTag = `h${Math.min(level, 6)}` as keyof JSX.IntrinsicElements;
+                          return (
+                            <HeaderTag key={index} className={`font-bold text-gray-800 mt-2 mb-1 ${
+                              level === 1 ? 'text-lg' : level === 2 ? 'text-base' : 'text-sm'
+                            }`}>
+                              {text}
+                            </HeaderTag>
+                          );
+                        }
+                        
+                        // Handle numbered lists
+                        if (line.trim().match(/^\d+\./)) {
+                          const text = line.replace(/^\d+\.\s*/, '');
+                          return (
+                            <div key={index} className="flex items-start mt-1">
+                              <span className="text-ocean-600 mr-2 font-medium">
+                                {line.match(/^\d+/)?.[0]}.
+                              </span>
+                              <span className="flex-1">{formatInlineMarkdown(text)}</span>
+                            </div>
+                          );
+                        }
+                        
+                        // Handle bullet points
+                        if (line.trim().startsWith('*') && !line.includes('**')) {
+                          return (
+                            <div key={index} className="flex items-start mt-1">
+                              <span className="text-ocean-600 mr-2">•</span>
+                              <span className="flex-1">{formatInlineMarkdown(line.replace(/^\*\s*/, ''))}</span>
+                            </div>
+                          );
+                        }
+                        
+                        // Handle blockquotes
+                        if (line.trim().startsWith('>')) {
+                          return (
+                            <div key={index} className="border-l-4 border-ocean-300 pl-3 mt-1 italic text-gray-600">
+                              {formatInlineMarkdown(line.replace(/^>\s*/, ''))}
+                            </div>
+                          );
+                        }
+                        
+                        // Regular text with inline formatting
+                        return (
+                          <div key={index} className="mt-1">
+                            {formatInlineMarkdown(line)}
+                          </div>
+                        );
+                      })}
+                    </div>
                                             <p className={`text-xs mt-1 ${
                           message.sender === 'user' ? 'text-ocean-100' : 'text-gray-500'
                         }`}>

@@ -99,6 +99,7 @@ This is user's question: ${text}
 
 [OUTPUT FORMAT]
 - Provide a structured answer with short sections/bullets.
+- Make sure to show the overview of the answer in first few sentences before diving into the details.
 - Include examples/templates where helpful.
 - Close with tailored follow-up questions and a concrete next step.
 - Write in organized and well-structured paragraphs, have headings and subheadings.

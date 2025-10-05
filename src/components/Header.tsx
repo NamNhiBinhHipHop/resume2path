@@ -61,6 +61,27 @@ export default function Header() {
               Resume2Path
             </span>
           </a>
+          {/*
+          Navigation is disabled for now
+          <nav className="hidden md:flex items-center space-x-8">
+            <a href="/#features" className="text-ocean-200 hover:text-white transition-all duration-300 hover:scale-105 relative group font-medium">
+              Features
+              <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-ocean-400 transition-all duration-300 group-hover:w-full"></span>
+            </a>
+            <a href="/#courses" className="text-ocean-200 hover:text-white transition-all duration-300 hover:scale-105 relative group font-medium">
+              Courses
+              <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-ocean-400 transition-all duration-300 group-hover:w-full"></span>
+            </a>
+            <a href="/#resources" className="text-ocean-200 hover:text-white transition-all duration-300 hover:scale-105 relative group font-medium">
+              Resources
+              <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-ocean-400 transition-all duration-300 group-hover:w-full"></span>
+            </a>
+            <a href="/#community" className="text-ocean-200 hover:text-white transition-all duration-300 hover:scale-105 relative group font-medium">
+              Community
+              <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-ocean-400 transition-all duration-300 group-hover:w-full"></span>
+            </a>
+          </nav>
+          */}
 
           {/* Auth Area */}
           <div className="hidden md:flex items-center space-x-4">

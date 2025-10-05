@@ -45,23 +45,23 @@ const firebaseConfig = {
 // }
 
 // // Lightweight connectivity test for debugging: tries to read a known doc
-// export async function testFirebaseConnection() {
-//   if (!db) {
-//     return { ok: false, error: 'Firebase not configured' } as const;
-//   }
+export async function testFirebaseConnection() {
+  if (!db) {
+    return { ok: false, error: 'Firebase not configured' } as const;
+  }
   
-//   try {
-//     const pingRef = doc(db, '__health', 'ping');
-//     await getDoc(pingRef).catch((e: any) => {
-//       // Permission denied still proves connectivity
-//       if (e?.code === 'permission-denied') return null;
-//       throw e;
-//     });
-//     return { ok: true } as const;
-//   } catch (e: any) {
-//     return { ok: false, error: String(e) } as const;
-//   }
-// }
+  try {
+    const pingRef = doc(db, '__health', 'ping');
+    await getDoc(pingRef).catch((e: any) => {
+      // Permission denied still proves connectivity
+      if (e?.code === 'permission-denied') return null;
+      throw e;
+    });
+    return { ok: true } as const;
+  } catch (e: any) {
+    return { ok: false, error: String(e) } as const;
+  }
+}
 
 // export { auth, provider, db };
 

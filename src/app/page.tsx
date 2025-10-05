@@ -305,7 +305,7 @@ export default function HomePage() {
               Gemini AI + Market Intelligence
             </h2>
             <p className="text-lg text-ocean-200 max-w-3xl mx-auto">
-              Google's Gemini AI combined with real-time job market data for superior analysis 6
+              Google's Gemini AI combined with real-time job market data for superior analysis
             </p>
           </div>
           

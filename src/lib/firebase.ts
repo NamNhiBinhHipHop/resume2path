@@ -12,6 +12,7 @@ const firebaseConfig = {
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
 };
 
+
 // Check if Firebase is configured
 // const isFirebaseConfigured = Object.values(firebaseConfig).every(value => value && value !== 'your_firebase_key_here');
 

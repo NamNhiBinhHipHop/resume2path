@@ -44,7 +44,10 @@ ${historyBlock}
 
 This is user's question: ${text}
 
-Make sure to understand the conversation history to comprehend the user's question and provide better advice.
+
+IMPORTANT: 
+- Read the conversation history carefully and understand the user's question and provide better advice.
+- If the user's question seems off-topic, vague, it might be understood after reading the conversation history.
 
 [STEP 1: CLASSIFY THE QUERY]
 - Analyze the user's query and assign one or more categories from the five above.
@@ -129,7 +132,10 @@ Make sure to understand the conversation history to comprehend the user's questi
   * Numbered lists: 1. 2. 3. for step-by-step instructions
   * Line breaks for spacing between sections
 - Do NOT use any other formatting (no emojis, no special characters, no unsupported markdown)
-- IMPORTANT: Do NOT include any thinking process, reasoning, or classification statements in your response. Start directly with your helpful advice. Do not mention "I will classify this as" or similar meta-commentary.`;
+ - IMPORTANT: Do NOT include any thinking process, reasoning, labels, or classification statements in your response. Do not mention or reference the steps, the words "conversation history", or any meta like "Based on the conversation history". Start directly with helpful advice.
+ - If the query is irrelevant to career development, respond with a short redirect only (no meta, no justification). For example:
+   "Let's focus on career development. I can help with:\n\n* Resume writing tips\n* Career development advice\n* Job search strategies\n* Interview preparation\n* Skill assessment"
+   Then stop.`;
     } else {
       // Resume analysis mode (strict JSON schema)
   const role = targetRole || 'professional';
@@ -199,9 +205,38 @@ ${exemplar}`;
     let analysisResult;
     
     if (isChat) {
-      // Chat mode - return text response directly
+      // Chat mode - sanitize to remove any exposed "thinking" or meta lines
+      const sanitizeChatText = (input: string): string => {
+        if (!input) return input;
+        const metaPatterns = [
+          /^\s*\[?step\b.*\]?/i,
+          /^\s*classification\s*:/i,
+          /^\s*classify\s*:/i,
+          /^\s*reason(?:ing)?\s*:/i,
+          /^\s*thoughts?\s*:/i,
+          /^\s*internal\s*:/i,
+          /^\s*analysis\s*:/i,
+          /^\s*meta\s*:/i,
+          /^\s*plan\s*:/i,
+          /^\s*based on the conversation history.*$/i,
+          /^\s*from the conversation history.*$/i,
+          /^\s*using the conversation history.*$/i,
+          /^\s*the conversation history shows.*$/i,
+        ];
+        const lines = input.split('\n');
+        const filtered: string[] = [];
+        for (let i = 0; i < lines.length; i++) {
+          const t = lines[i].trim();
+          if (metaPatterns.some((rx) => rx.test(t))) continue;
+          filtered.push(lines[i]);
+        }
+        while (filtered.length && filtered[0].trim() === '') filtered.shift();
+        return filtered.join('\n').trim();
+      };
+
+      const cleaned = sanitizeChatText(geminiText);
       analysisResult = {
-        description: geminiText,
+        description: cleaned,
         type: 'chat'
       };
     } else {

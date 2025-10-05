@@ -17,6 +17,7 @@
     "@radix-ui/react-accordion": "^1.1.2",
     "@radix-ui/react-slot": "^1.0.2",
     "@vercel/blob": "^0.22.1",
+    "chromadb": "^3.0.17",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.0.0",
     "dotenv": "^17.2.2",

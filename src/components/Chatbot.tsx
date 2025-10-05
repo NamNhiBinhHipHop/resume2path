@@ -129,6 +129,18 @@ export default function Chatbot() {
     }
   };
 
+  // Build a compact recent history payload to provide context to the AI
+  const MAX_HISTORY_ITEMS = 100;
+  const buildCompactHistory = (items: Message[]) => {
+    return items
+      .slice(-MAX_HISTORY_ITEMS)
+      .map((m) => ({
+        role: m.sender === 'user' ? 'user' : 'assistant',
+        text: (m.text || '').slice(0, 800000),
+        ts: new Date(m.timestamp).toISOString()
+      }));
+  };
+
   const handleSendMessage = async () => {
     if (!inputValue.trim() || isTyping) return;
 
@@ -146,6 +158,9 @@ export default function Chatbot() {
 
     // Call Gemini AI API
     try {
+      // Include compact recent history for context
+      const historyPayload = buildCompactHistory([...(messages || []), userMessage]);
+
       const response = await fetch('/api/gemini', {
         method: 'POST',
         headers: {
@@ -153,7 +168,8 @@ export default function Chatbot() {
         },
         body: JSON.stringify({
           text: inputValue, // Send the user's question directly
-          isChat: true
+          isChat: true,
+          history: historyPayload
         })
       });
       
@@ -281,14 +297,34 @@ export default function Chatbot() {
                           );
                         }
                         
-                        // Handle bullet points
-                        if (line.trim().startsWith('*') && !line.includes('**')) {
-                          return (
-                            <div key={index} className="flex items-start mt-1">
-                              <span className="text-ocean-600 mr-2">•</span>
-                              <span className="flex-1">{formatInlineMarkdown(line.replace(/^\*\s*/, ''))}</span>
-                            </div>
-                          );
+                        // Handle bullet points (including inline bullets like "Example:*")
+                        if (line.includes('*') && !line.includes('**')) {
+                          // Check if it's a bullet point at start or inline
+                          const bulletMatch = line.match(/^(\s*)\*(\s+)/);
+                          const inlineBulletMatch = line.match(/(\w+):\*(\s+)/);
+                          
+                          if (bulletMatch) {
+                            // Standard bullet point at start
+                            const text = line.replace(/^\s*\*\s*/, '');
+                            return (
+                              <div key={index} className="flex items-start mt-1">
+                                <span className="text-ocean-600 mr-2">•</span>
+                                <span className="flex-1">{formatInlineMarkdown(text)}</span>
+                              </div>
+                            );
+                          } else if (inlineBulletMatch) {
+                            // Inline bullet like "Example:* text"
+                            const parts = line.split(/:\*(\s+)/);
+                            const prefix = parts[0];
+                            const text = parts.slice(2).join('');
+                            return (
+                              <div key={index} className="flex items-start mt-1">
+                                <span className="text-ocean-600 mr-2">{prefix}:</span>
+                                <span className="text-ocean-600 mr-2">•</span>
+                                <span className="flex-1">{formatInlineMarkdown(text)}</span>
+                              </div>
+                            );
+                          }
                         }
                         
                         // Handle blockquotes

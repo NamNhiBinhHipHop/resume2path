@@ -9,7 +9,7 @@ export async function POST(req: NextRequest) {
       console.error('Missing GEMINI_API_KEY');
       return NextResponse.json({ error: 'Server not configured for Gemini. Set GEMINI_API_KEY.' }, { status: 500 });
     }
-  const { text, targetRole, isChat, jobDescription } = await req.json();
+  const { text, targetRole, isChat, jobDescription, history } = await req.json();
 
     if (!text) {
       return NextResponse.json({ error: 'Text content is required' }, { status: 400 });
@@ -19,6 +19,16 @@ export async function POST(req: NextRequest) {
     
   if (isChat) {
       // Chat mode - comprehensive career guidance
+      // Ensure oldest -> newest order if timestamps are provided
+      let orderedHistory: any[] = Array.isArray(history) ? [...history] : [];
+      try {
+        orderedHistory.sort((a: any, b: any) => new Date(a.ts || 0).getTime() - new Date(b.ts || 0).getTime());
+      } catch {}
+
+      const historyBlock = orderedHistory.length
+        ? `\nConversation history (most recent last):\n` + orderedHistory.map((h: any) => `- ${h.role}: ${h.text}`).join('\n') + '\n'
+        : '';
+
       prompt = `You are an expert in career development and employability training.
 Your goal is to help users grow professionally through actionable, personalized advice.
 You specialize in five core areas:
@@ -28,10 +38,17 @@ You specialize in five core areas:
 4) Interview Preparation
 5) Skill Assessment
 
+
+This is the conversation history:
+${historyBlock}
+
 This is user's question: ${text}
+
+Make sure to understand the conversation history to comprehend the user's question and provide better advice.
 
 [STEP 1: CLASSIFY THE QUERY]
 - Analyze the user's query and assign one or more categories from the five above.
+- Use the conversation history to understand the user's question and accurately classify the question.
 - If multiple categories apply (e.g., "resume for interview"), integrate them coherently.
 - Please think carefully and thoroughly before deciding on the categories.
 - If the user's query is not related to any of the five categories, return "General Career Support".

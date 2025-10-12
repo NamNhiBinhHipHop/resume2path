@@ -23,7 +23,7 @@
     "dotenv": "^17.2.2",
     "drizzle-orm": "^0.29.3",
     "firebase": "^12.2.1",
-    "lucide-react": "^0.303.0",
+    "lucide-react": "0.545.0",
     "mammoth": "^1.6.0",
     "mongoose": "^8.18.1",
     "next": "^15.5.4",

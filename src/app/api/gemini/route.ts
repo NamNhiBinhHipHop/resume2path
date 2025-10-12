@@ -140,6 +140,7 @@ IMPORTANT:
    "Let's focus on career development. I can help with:\n\n* Resume writing tips\n* Career development advice\n* Job search strategies\n* Interview preparation\n* Skill assessment"
    Then stop.`;
     } else {
+
       // Resume analysis mode (strict JSON schema)
   const role = targetRole || 'professional';
       const schema = `{
@@ -159,9 +160,46 @@ Analyze the following resume for the role of "${role}" and respond ONLY with min
 ${schema}
 
 Guidelines:
-- Be specific and tie skills/evidence to resume content when possible.
-- Keep strings concise. Avoid markdown. Do not include any text outside JSON.
-- Provide 2-4 items for gaps and suggestions. Provide 2-3 tracks.
+- Output minified JSON only that matches the schema exactly. No prose, no comments, no extra keys, no trailing commas.
+- Do not hallucinate. If something isn't in the resume or JD, omit it or use an empty array/string per schema.
+- Ground every claim. Each skills[].evidence must quote or closely paraphrase a concrete phrase/metric/tool from the resume (≤20 words).
+- Be concise. Keep strings tight (ideally ≤160 chars each). Prefer fragments over full sentences where clear.
+- Normalize & de-dupe. Merge duplicates (e.g., "JS/JavaScript"), use canonical names (e.g., "React").
+- Sorting rules:
+  - skills: sort by rating desc, then name asc.
+  - gaps: sort by priority asc (1 = highest).
+  - suggestions: sort by impact desc, then effort asc.
+- Ratings & scales:
+  - skills[].rating = 1-10 (evidence of real use → higher; coursework only → <=6).
+  - gaps[].priority = 1-3 (1 = urgent / high ROI).
+  - suggestions[].impact & effort = 1-3 (1 = low, 3 = high).
+- Experience list: Provide 3-8 short items like "Software Engineer Intern — EcoSmart Solutions Agency (Oct 2024-Present)". Use resume-only titles/dates.
+- Use numbers. Preserve metrics as written (e.g., "10k+", "2x", "25%"). Don't convert or round.
+- Tailor to target role (if JD provided):
+  - Map resume skills/experience to JD requirements; reflect this in fit.rationale.
+  - Prioritize JD-aligned skills first; gaps should target the JD.
+- Gaps must be actionable. howToLearn = concrete steps (e.g., "Ship 2-3 CRUD apps with Next.js/Prisma; complete XYZ course; implement A/B test on project").
+- For suggestions, focus on *high-impact, resume-improvable actions* (e.g., quantify impact, restructure bullets, highlight leadership, surface technical stack clearly).
+- Each suggestion must be concrete and specific to the candidate's actual content (e.g., “Add metrics to EcoSmart frontend work” instead of “make it stronger”).
+- Suggest showing measurable impact where missing (e.g., add numbers, scale, growth %, throughput, adoption).
+- Recommend reordering or grouping sections for clarity if resume is long or unfocused.
+- Prioritize suggestions that improve JD alignment (e.g., if JD is SWE — highlight engineering tools, de-emphasize unrelated coursework).
+- Suggest improving clarity of roles/dates if merged by OCR (e.g., split “EcoSmartOctober 2024 - Present” into clear company/date fields).
+- Suggest adding missing technical keywords that are actually reflected in experience but not explicitly listed (e.g., “API integration” mentioned implicitly).
+- Suggest highlighting leadership and ownership in bullets where the candidate led, built, or launched features.
+- Keep each suggestion actionable but detailed (~300 chars).
+- impact = how much this change improves JD alignment or resume clarity; effort = how easy this change is to make.
+- Suggest removing fluff or weak bullets if they don't add value.
+- If there are repeated skills across bullets, suggest consolidating them for cleaner presentation.
+- Fit scoring rubric:
+  - 9-10: Strong alignment on core stack + quantifiable impact + JD match.
+  - 7-8: Good overlap; minor gaps.
+  - 5-6: Partial alignment; several gaps.
+  - <=4: Limited relevance.
+- Tracks: Return 2-3 concrete options aligned to gaps (e.g., mock interview, portfolio review, project build sprint) with valid ctaUrl.
+- Consistency check: If dates/locations look merged (OCR), split conservatively from tokens (e.g., "Saint Paul, Minnesota", "May 2025 - Aug 2025") but don't invent new values.
+- Determinism: When unsure between two labels, prefer the more general term (e.g., "Databases" over "Statistical Databases").
+
 
 Resume content:
 ${text}
@@ -177,6 +215,7 @@ ${exemplar}`;
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
+        ...(isChat ? {} : { generationConfig: { response_mime_type: 'application/json' } }),
         contents: [
           {
             parts: [
@@ -245,24 +284,7 @@ ${exemplar}`;
     } else {
       // Resume analysis mode - try to parse JSON
       try {
-        // Look for JSON content in the response
-        const jsonMatch = geminiText.match(/\{[\s\S]*\}/);
-        if (jsonMatch) {
-          analysisResult = JSON.parse(jsonMatch[0]);
-        } else {
-          // Fallback: create structured response from text
-          analysisResult = {
-            skills: [],
-            experience: [],
-            summary: "",
-            gaps: [],
-            suggestions: [],
-            fit: { score: 7, rationale: "" },
-            tracks: [
-              { id: "career-dev", title: "Career Development Path", ctaUrl: "https://calendly.com/your-mentor" }
-            ]
-          };
-        }
+        analysisResult = JSON.parse(geminiText);
       } catch (parseError) {
         console.error('Failed to parse Gemini response:', parseError);
         // Fallback response

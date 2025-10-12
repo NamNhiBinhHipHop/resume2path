@@ -45,8 +45,14 @@ export default function HomePage() {
       });
 
       if (response.ok) {
-        const { analysisId } = await response.json();
-        router.push(`/analysis/${analysisId}`);
+        const data = await response.json();
+        const redirectUrl = data.redirectUrl || (data.analysisId ? `/analysis-simple/${data.analysisId}` : '/');
+        try {
+          if (typeof window !== 'undefined' && data.analysisId && data.analysis) {
+            sessionStorage.setItem(`analysis:${data.analysisId}`, JSON.stringify({ result: data.analysis }));
+          }
+        } catch {}
+        router.push(redirectUrl);
       } else {
         alert('Upload failed. Please try again.');
       }
@@ -200,7 +206,7 @@ export default function HomePage() {
                           Click to upload or drag and drop
                         </p>
                         <p className="text-sm text-ocean-300 mt-2">
-                          PDF or DOCX up to 10MB
+                          PDF or DOCX up to 40MB
                         </p>
                       </label>
                     ) : (

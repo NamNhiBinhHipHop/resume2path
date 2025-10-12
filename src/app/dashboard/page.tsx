@@ -170,8 +170,14 @@ export default function Dashboard() {
 
       const response = await fetch('/api/upload', { method: 'POST', body: data });
       if (response.ok) {
-        const { analysisId } = await response.json();
-        router.push(`/analysis/${analysisId}`);
+        const data = await response.json();
+        const redirectUrl = data.redirectUrl || (data.analysisId ? `/analysis-simple/${data.analysisId}` : '/');
+        try {
+          if (typeof window !== 'undefined' && data.analysisId && data.analysis) {
+            sessionStorage.setItem(`analysis:${data.analysisId}`, JSON.stringify({ result: data.analysis }));
+          }
+        } catch {}
+        router.push(redirectUrl);
       } else if (response.status === 403) {
         const err = await response.json().catch(() => ({ error: 'Monthly limit reached.' }));
         alert(err.error || 'Monthly limit reached.');
@@ -296,7 +302,7 @@ export default function Dashboard() {
                     <Button
                       type="button"
                       disabled={!selectedAnalysisId}
-                      onClick={() => selectedAnalysisId && router.push(`/analysis/${selectedAnalysisId}`)}
+                      onClick={() => selectedAnalysisId && router.push(`/analysis-simple/${selectedAnalysisId}`)}
                       className="h-12"
                     >
                       View

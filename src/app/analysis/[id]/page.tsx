@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -15,6 +15,7 @@ type AnalysisResult = any;
 
 export default function AnalysisPage() {
   const params = useParams();
+  const router = useRouter();
   const [analysis, setAnalysis] = useState<AnalysisResult | null>(null);
   const [role, setRole] = useState<string>('General');
   const [fitScore, setFitScore] = useState<number | null>(null);
@@ -26,10 +27,10 @@ export default function AnalysisPage() {
   useEffect(() => {
     const fetchAnalysis = async () => {
       try {
+        // First try the DB-backed endpoint (may be disabled in demo)
         const response = await fetch(`/api/analysis/${params.id}`);
         if (response.ok) {
           const data = await response.json();
-          // API returns { result: { id, result, createdAt, resume, mentee } }
           const res = data.result?.result || data.result;
           setAnalysis(res);
           setRole(res?.role || data.result?.mentee?.targetRole || 'General');
@@ -39,7 +40,29 @@ export default function AnalysisPage() {
           setCreatedAtIso(data.result?.createdAt || null);
           setResumeMeta({ fileUrl: data.result?.resume?.fileUrl, fileType: data.result?.resume?.fileType });
         } else {
-          console.error('Failed to fetch analysis');
+          // If server hints a redirectUrl, follow it
+          try {
+            const hint = await response.json().catch(() => null);
+            if (hint?.redirectUrl) {
+              router.replace(hint.redirectUrl);
+              return;
+            }
+          } catch {}
+          // Fallback to simple analysis API
+          const simple = await fetch(`/api/analysis-simple/${params.id}`);
+          if (simple.ok) {
+            const data = await simple.json();
+            const res = data.result?.result || data.result;
+            setAnalysis(res);
+            setRole(res?.role || data.result?.mentee?.targetRole || 'General');
+            const fs = typeof res?.fit === 'number' ? res.fit : (typeof res?.fit?.score === 'number' ? res.fit.score : null);
+            setFitScore(fs);
+            setParseMeta(res?.parse || null);
+            setCreatedAtIso(data.result?.createdAt || null);
+            setResumeMeta({ fileUrl: data.result?.resume?.fileUrl, fileType: data.result?.resume?.fileType });
+          } else {
+            console.error('Failed to fetch analysis (both DB and simple).');
+          }
         }
       } catch (error) {
         console.error('Error fetching analysis:', error);

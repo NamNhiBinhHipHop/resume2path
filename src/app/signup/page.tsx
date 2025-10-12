@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -19,6 +19,15 @@ export default function SignupPage() {
   const [password, setPassword] = useState('')
   const [confirm, setConfirm] = useState('')
   const [error, setError] = useState<string | null>(null)
+
+  // If already logged in, redirect to dashboard
+  useEffect(() => {
+    if (!auth) return;
+    const unsub = auth.onAuthStateChanged((u) => {
+      if (u) router.replace('/dashboard')
+    })
+    return () => unsub()
+  }, [router])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()

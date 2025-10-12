@@ -1,14 +1,22 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { getAnalysis } from '@/lib/analysis-store';
 
 export async function GET(
-  request: NextRequest,
-  { params }: { params: { id: string } }
+  _request: NextRequest,
+  ctx: { params: Promise<{ id: string }> }
 ) {
   try {
-    const analysisId = parseInt(params.id);
+    const { id } = await ctx.params; // Next.js (latest) requires awaiting params
+    const analysisId = parseInt(id);
 
     if (isNaN(analysisId)) {
       return NextResponse.json({ error: 'Invalid analysis ID' }, { status: 400 });
+    }
+
+    // Try to return in-memory analysis if available
+    const existing = getAnalysis(analysisId);
+    if (existing) {
+      return NextResponse.json({ result: existing });
     }
 
     // Demo mode: Generate mock analysis data

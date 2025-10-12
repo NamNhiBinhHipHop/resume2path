@@ -36,8 +36,15 @@ export default function UploadPage() {
       });
 
       if (response.ok) {
-        const { analysisId } = await response.json();
-        router.push(`/analysis/${analysisId}`);
+        const data = await response.json();
+        const redirectUrl = data.redirectUrl || (data.analysisId ? `/analysis-simple/${data.analysisId}` : '/');
+        // Persist the Gemini analysis in sessionStorage so the view can use it even if server memory resets
+        try {
+          if (typeof window !== 'undefined' && data.analysisId && data.analysis) {
+            sessionStorage.setItem(`analysis:${data.analysisId}`, JSON.stringify({ result: data.analysis }));
+          }
+        } catch {}
+        router.push(redirectUrl);
       } else {
         alert('Upload failed. Please try again.');
       }
@@ -161,7 +168,7 @@ export default function UploadPage() {
                         {file ? file.name : 'Click to upload or drag and drop'}
                       </p>
                       <p className="text-xs text-gray-500 mt-1">
-                        PDF or DOCX up to 10MB
+                        PDF or DOCX up to 40MB
                       </p>
                     </label>
                   </div>
